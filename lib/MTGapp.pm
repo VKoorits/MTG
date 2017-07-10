@@ -4,6 +4,8 @@ use Dancer2::Plugin::CSRF;
 use DBI;
 use DBD::SQLite;
 use YAML::Tiny;
+use AnyEvent::HTTP;
+use Parser 'parse';
 
 use DDP;
 
@@ -30,19 +32,25 @@ sub connect_db {
 }	
 
 
+
 sub get_magic_cards {
 	my $query = shift;
 	if(!$query) {
 		return []
 	}
-	return [["python", "link"]];
+	
+	my @cards = @{ parse( $query ) };
+	
+	
+	
+	return \@cards;
 }
 
 
 hook 'before' => sub {
 		set session => 'simple';
-		#session user_id => 1;
-
+		session user_id => 1;
+		session balance => 1000;
 		if (request->path_info !~ m{^/login} &&
 			request->path_info !~ m{^/CSRF} &&
 		 	!session('user_id')) {
@@ -61,7 +69,7 @@ hook 'before' => sub {
 
 any '/' => sub {
 	my $dbh = connect_db();
-	my $user_id = 1;#session('user_id') ;
+	my $user_id = session('user_id') ;
 	my $query = <<END;
 		SELECT img.card_name, img.link 
 		FROM pictures as img
@@ -72,7 +80,6 @@ any '/' => sub {
 		)
 END
 	my $cards = $dbh->selectall_arrayref($query, {Slice => {}});
-	p $cards;
     template 'my_card', { cards => $cards };
 };
 
@@ -80,7 +87,8 @@ END
 post '/get_card' => sub {
 	my $query = params->{query};
 	my $cards = get_magic_cards($query);
-	p $cards;
+
+
 	redirect '/get_card';
 };
 any ["get", "head"] => '/get_card' => sub { template 'get_card', { csrf_token => get_csrf_token() } };
