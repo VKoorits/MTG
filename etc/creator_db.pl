@@ -10,11 +10,26 @@ my $stmt = <<END;
 CREATE TABLE users
              (user_id INTEGER PRIMARY KEY     AUTOINCREMENT,
               name      VARCHAR    NOT NULL,
-              password VARCHAR NOT NULL,
+              pass VARCHAR NOT NULL,
               balance INTEGER
              )
 END
 $dbh->do($stmt);
+
+#т.к. регистрация не предусмотрена, то здесь добавляется три пользователя
+my @users = (
+	{login => 'Nikola', pass => 'kvas'},
+	{login => 'Petr', pass => 'first'},
+	{login => 'login', pass => 'pass'},
+);
+my $sth = $dbh->prepare("INSERT INTO users (name, pass, balance) VALUES (?,?,?)");
+for my $user ( @users ) {
+	$sth->execute(
+			$user->{login},
+			crypt($user->{pass}, $user->{login}),
+			1000 #TODO завести константу
+	);
+}
 
 # уже известные ссылки на изображения, для избежания повторного парсинга
 $stmt = <<END;
