@@ -1,0 +1,34 @@
+<!doctype html>
+<head>
+    <title>Atom notes</title>
+</head>
+
+<html>
+<body>
+	<center>
+		<table class="main_table">
+			<tr>
+				<td colspan="3" height="30" bgcolor="#aaa">
+					<center>
+						<h1><font color=#754> Magic the Gathering</font> </h1>
+					</center>
+				</td>
+			</tr>
+			<tr>
+				<td height="30" width="33%" bgcolor="#652"><center><b>Купленные карты</b></center></td>
+				<td width="33%" bgcolor="#985"><center><b>Приобрести новые</b></center></td>
+				<td width="33%" bgcolor="#985"><center><b>Третья вкладка</b></center></td>
+			</tr>
+			<tr>
+				<td colspan="3" valign="top" bgcolor="#aaa">
+					<div>
+					
+					<div>
+				</td>
+			</tr>
+		</table>
+	</center>
+
+
+</body>
+</html>

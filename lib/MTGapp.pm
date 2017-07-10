@@ -48,7 +48,7 @@ hook 'before' => sub {
 
 
 get '/' => sub {
-    template 'index';
+    template 'my_card';
 };
 
 post '/login' => sub {

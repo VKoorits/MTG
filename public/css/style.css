@@ -1,6 +1,8 @@
 body {
-	background-color: black;
+	background-color: #ddd;
+	background-image: url("/images/bg.jpg");
 	color: white;
+	
 }
 
 .auth {
@@ -11,4 +13,8 @@ body {
 	left: 50%;
 	margin: -125px 0 0 -200px;
 	outline: 1px solid #fff;
+}
+
+.main_table {
+	width: 600px;
 }
