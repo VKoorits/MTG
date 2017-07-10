@@ -32,7 +32,6 @@ sub connect_db {
 }	
 
 
-
 sub get_magic_cards {
 	my $query = shift;
 	if(!$query) {
@@ -42,10 +41,17 @@ sub get_magic_cards {
 	my @cards = @{ parse( $query ) };
 	
 	
-	
 	return \@cards;
 }
 
+
+sub deal {
+	print "\n\n";
+	p @_;
+	print "\n\n";
+}
+
+##############################
 
 hook 'before' => sub {
 		set session => 'simple';
@@ -86,13 +92,35 @@ END
 
 post '/get_card' => sub {
 	my $query = params->{query};
-	my $cards = get_magic_cards($query);
-
-
-	redirect '/get_card';
+	my @cards = @{ get_magic_cards($query) };
+	#TODO! занесение в базу
+	
+	if( @cards == 0) {
+		template 'get_card', {message => "По вашему запросу не найдено карт :( попробуйте ещё раз"}
+	} elsif( @cards == 1 ) {
+		deal($cards[0]);
+		redirect '/';
+	} else {
+		print "\nbuy_card\n";
+		template 'select_card', { cards => \@cards, csrf_token => get_csrf_token() };
+	}
 };
 any ["get", "head"] => '/get_card' => sub { template 'get_card', { csrf_token => get_csrf_token() } };
 
+
+post '/proof' => sub {
+	my $card_name = params->{card_name};
+	my $link = params->{'link'};
+	template 'proof', {card => $card_name, link => $link, csrf_token => get_csrf_token() };
+};
+post '/deal' => sub {
+	my $card_name = params->{card_name};
+	my $link = params->{'link'};
+	deal( { card_name => $card_name, link => $link } );
+	print "card_name => ".$card_name."\n";
+	print "link => ".$link."\n";
+	redirect '/';
+};
 
 post '/login' => sub {
    my $user = params->{username};

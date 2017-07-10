@@ -22,7 +22,7 @@
 				</td>
 				<td width="33%" bgcolor="#652">
 					<center>
-						<b><a href="/get_card" class="top_link">Приобрести новые</a></b>
+						<b><a href="/get_card">Приобрести новые</a></b>
 					</center>
 				</td>
 				<td width="33%" bgcolor="#985">
@@ -33,12 +33,15 @@
 			<tr>
 				<td colspan="3" valign="top" bgcolor="#aaa">
 					<div>
-						<h2><% message %></h2>
-						<form action="" method="post">
-							<p>Введите название карты: <input type="text" name="query" placeholder="query" /></p>
-							<p><input type="submit" value="Search" /></p>
-								<input type="hidden" name="csrf_token" placeholder="csrftoken"  value="<% csrf_token %>"/>
-						</form>		
+						<span>поттвердите покупку карты</span>
+						<br><br>
+						<form action="/deal" method="post">
+							<% card %>
+							<input type="submit" value="Buy card" />
+									<input type="hidden" name="card_name" value="<% card %>" />
+									<input type="hidden" name="link" value="<% link %>" />
+									<input type="hidden" name="csrf_token" placeholder="csrftoken"  value="<% csrf_token %>"/>
+						</form>	
 					<div>
 				</td>
 			</tr>
