@@ -10,7 +10,7 @@ use Parser 'parse';
 use DDP;
 
 our $VERSION = '0.1';
-my $ONE_CARD_PRICE = 0;
+my $ONE_CARD_PRICE = 100;
 
 
 my $db_handler = undef;
@@ -122,19 +122,48 @@ END
 
 post '/get_card' => sub {
 	my $query = params->{query};
-	my @cards = @{ get_magic_cards($query) };
-	
 	my $dbh = connect_db();
-	for my $card (@cards) {
-		my $id_stmt = "SELECT card_id FROM pictures WHERE card_name=\"$card->{card_name}\"";
-		p $id_stmt;
-		my $card_id = $dbh->selectall_arrayref($id_stmt);
-		if(not defined $card_id->[0]) {
-			my $stmt = "INSERT INTO pictures (card_name, link) VALUES (\"$card->{card_name}\", \"$card->{link}\")";
+	my $check_db = $dbh->selectall_arrayref(
+		"SELECT req_id FROM requests WHERE req='$query'");
+	
+	my @cards;
+	#если такой запрос встречался, то мы берем его из БД
+	if( defined $check_db->[0] ) {
+		@cards = @{ $dbh->selectall_arrayref(
+			"SELECT img.card_name, img.link "
+			."FROM pictures as img "
+			."WHERE img.card_id IN ( "
+				."SELECT answer.card_id "
+				."FROM answers as answer "
+				."WHERE answer.req_id=$check_db->[0]->[0] "
+			." )", {Slice => {}}
+			)};
+	} else {
+		@cards = @{ get_magic_cards($query) };
+		#TODO last_insert_id
+		$dbh->do("INSERT INTO requests (req) VALUES ('$query')");
+		$check_db = $dbh->selectall_arrayref(
+		"SELECT req_id FROM requests WHERE req='$query'");
+		
+		#TODO множественные insert-ы будут быстрее цикла
+		for my $card (@cards) {
+			
+			my $id_stmt = "SELECT card_id FROM pictures WHERE card_name=\"$card->{card_name}\"";
+			my $card_id = $dbh->selectall_arrayref($id_stmt);
+			
+			if(not defined $card_id->[0]) {
+				my $stmt = "INSERT INTO pictures (card_name, link) VALUES (\"$card->{card_name}\", \"$card->{link}\")";
+				$dbh->do($stmt);
+				#TODO last_insert_id
+				$card_id = $dbh->selectall_arrayref($id_stmt);
+			}
+			
+			my $stmt = "INSERT INTO answers (req_id, card_id) VALUES"
+					."($check_db->[0]->[0], $card_id->[0]->[0])";
+			p $stmt;
 			$dbh->do($stmt);
 		}
 	}
-	
 	
 	if( @cards == 0) {
 		template 'get_card', {csrf_token => get_csrf_token(), ok => 1, message => "По вашему запросу не найдено карт :( попробуйте ещё раз"}

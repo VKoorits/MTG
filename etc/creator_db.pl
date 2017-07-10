@@ -9,7 +9,7 @@ my $dbh = DBI->connect("DBI:SQLite:dbname=MTG.db", "", "", { RaiseError => 1 }) 
 my $stmt = <<END;
 CREATE TABLE users
              (user_id INTEGER PRIMARY KEY     AUTOINCREMENT,
-              name      VARCHAR    NOT NULL,
+              name VARCHAR NOT NULL,
               pass VARCHAR NOT NULL,
               balance INTEGER
              )
@@ -45,6 +45,25 @@ $dbh->do($stmt);
 $stmt = <<END;
 CREATE TABLE available_cards	
              (user_id INTEGER NOT NULL,
+              card_id INTEGER NOT NULL
+             )
+END
+$dbh->do($stmt);
+
+# список совершенных запросов
+$stmt = <<END;
+CREATE TABLE requests	
+             (req_id INTEGER PRIMARY KEY     AUTOINCREMENT,
+              req VARCHAR NOT NULL
+             )
+END
+$dbh->do($stmt);
+
+
+# ответы, полученные на запросы
+$stmt = <<END;
+CREATE TABLE answers	
+             (req_id INTEGER NOT NULL,
               card_id INTEGER NOT NULL
              )
 END
