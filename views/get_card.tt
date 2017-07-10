@@ -33,12 +33,16 @@
 			<tr>
 				<td colspan="3" valign="top" bgcolor="#aaa">
 					<div>
-						<h2><% message %></h2>
-						<form action="" method="post">
-							<p>Введите название карты: <input type="text" name="query" placeholder="query" /></p>
-							<p><input type="submit" value="Search" /></p>
-								<input type="hidden" name="csrf_token" placeholder="csrftoken"  value="<% csrf_token %>"/>
-						</form>		
+						<% IF ok == 1 %>
+							<h2><% message %></h2>
+							<form action="" method="post">
+								<p>Введите название карты: <input type="text" name="query" placeholder="query" /></p>
+								<p><input type="submit" value="Search" /></p>
+									<input type="hidden" name="csrf_token" placeholder="csrftoken"  value="<% csrf_token %>"/>
+							</form>	
+						<% ELSE %>
+							<h1>У вас недостаточно монет для покупки новой карты :(<h1>
+						<% END %>
 					<div>
 				</td>
 			</tr>
