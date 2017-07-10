@@ -10,6 +10,8 @@ use Parser 'parse';
 use DDP;
 
 our $VERSION = '0.1';
+my $ONE_CARD_PRICE = 100;
+
 
 my $db_handler = undef;
 sub connect_db {
@@ -45,10 +47,27 @@ sub get_magic_cards {
 }
 
 
-sub deal {
-	print "\n\n";
-	p @_;
-	print "\n\n";
+sub deal {	
+	my $dbh = connect_db();
+	
+	my $id_stmt = "SELECT card_id FROM pictures WHERE card_name=\"$_[0]->{card_name}\"";
+	my $card_id = $dbh->selectall_arrayref($id_stmt);
+	
+	if(not defined $card_id->[0]) {
+		my $stmt = "INSERT INTO pictures (card_name, link) VALUES (\"$_[0]->{card_name}\", \"$_[0]->{link}\")";
+		$dbh->do($stmt);
+		
+		$card_id = $dbh->selectall_arrayref($id_stmt);
+	}
+	
+	$dbh->do("INSERT INTO available_cards (user_id, card_id) VALUES (".session('user_id').",".$card_id->[0]->[0].") ");
+	$dbh->do( "UPDATE users SET balance="
+			  .(session('balance')-$ONE_CARD_PRICE)
+			  ." WHERE user_id="
+			  .session('user_id')
+			);
+	session balance => session('balance')-$ONE_CARD_PRICE;
+	
 }
 
 ##############################
@@ -138,7 +157,7 @@ post '/login' => sub {
 		if( not defined $answer) {
 			template 'login';	
 		}		
-		#TODO переделать в хеш, избавиться от цифр
+
 		session user_id => $answer->[0];
 		session balance => $answer->[1];
 		redirect '/';
@@ -148,6 +167,6 @@ post '/login' => sub {
 };
 any ["get", "head"] => '/login' => sub { template 'login', { csrf_token => get_csrf_token() } };
 
-any '/balance' => sub { template 'balance', {balance => 1000} };
+any '/balance' => sub { template 'balance', {balance => session('balance'), price => $ONE_CARD_PRICE} };
 
 true;
