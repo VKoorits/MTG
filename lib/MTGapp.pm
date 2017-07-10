@@ -9,10 +9,9 @@ use DDP;
 
 our $VERSION = '0.1';
 
-
+my $db_handler = undef;
 sub connect_db {
-	my $dbh;
-	return $dbh if(defined $dbh);
+	return $db_handler if(defined $db_handler);
 	my $config = YAML::Tiny->read('etc/config_file.yaml');
 	$config = $config->[0];
 	
@@ -24,14 +23,25 @@ sub connect_db {
 	
 
 	my $dbd = "DBI:$driver:dbname=$db_name";
-	$dbh = DBI->connect($dbd, $username, $password, { RaiseError => 1 })
+	$db_handler = DBI->connect($dbd, $username, $password, { RaiseError => 1 })
 		                  or die "can not connect: ".$DBI::errstr;
 	
-	return $dbh;
+	return $db_handler;
 }	
-=head
+
+
+sub get_magic_cards {
+	my $query = shift;
+	if(!$query) {
+		return []
+	}
+	return [["python", "link"]];
+}
+
+
 hook 'before' => sub {
 		set session => 'simple';
+		#session user_id => 1;
 
 		if (request->path_info !~ m{^/login} &&
 			request->path_info !~ m{^/CSRF} &&
@@ -47,9 +57,9 @@ hook 'before' => sub {
 
 		
     };
-=cut
 
-get '/' => sub {
+
+any '/' => sub {
 	my $dbh = connect_db();
 	my $user_id = 1;#session('user_id') ;
 	my $query = <<END;
@@ -66,6 +76,16 @@ END
     template 'my_card', { cards => $cards };
 };
 
+
+post '/get_card' => sub {
+	my $query = params->{query};
+	my $cards = get_magic_cards($query);
+	p $cards;
+	redirect '/get_card';
+};
+any ["get", "head"] => '/get_card' => sub { template 'get_card', { csrf_token => get_csrf_token() } };
+
+
 post '/login' => sub {
    my $user = params->{username};
    my $password = params->{password};
@@ -73,7 +93,7 @@ post '/login' => sub {
         
 		my $dbh = connect_db();
 
-		my $sth = $dbh->prepare("SELECT user_id FROM users WHERE name = ? AND pass = ?");
+		my $sth = $dbh->prepare("SELECT user_id, balance FROM users WHERE name = ? AND pass = ?");
 		#TODO сделать невозможным ввод русских букв, иначе crypt падает
 		$sth->execute($user, crypt($password, $user) );
 		my $answer = $sth->fetchrow_arrayref();
@@ -82,7 +102,9 @@ post '/login' => sub {
 		if( not defined $answer) {
 			template 'login';	
 		}		
+		#TODO переделать в хеш, избавиться от цифр
 		session user_id => $answer->[0];
+		session balance => $answer->[1];
 		redirect '/';
 	}else{
 		template 'login';
@@ -90,5 +112,6 @@ post '/login' => sub {
 };
 any ["get", "head"] => '/login' => sub { template 'login', { csrf_token => get_csrf_token() } };
 
+any '/balance' => sub { template 'balance', {balance => 1000} };
 
 true;

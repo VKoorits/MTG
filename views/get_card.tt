@@ -15,14 +15,14 @@
 				</td>
 			</tr>
 			<tr>
-				<td height="30" width="33%" bgcolor="#652">
+				<td height="30" width="33%" bgcolor="#985">
 					<center>
-						<b>Купленные карты</b>
+						<b><a href="/" class="top_link">Купленные карты</a></b>
 					</center>
 				</td>
-				<td width="33%" bgcolor="#985">
+				<td width="33%" bgcolor="#652">
 					<center>
-						<b><a href="/get_card" class="top_link">Приобрести новые</a></b>
+						<b>Приобрести новые</b>
 					</center>
 				</td>
 				<td width="33%" bgcolor="#985">
@@ -33,10 +33,11 @@
 			<tr>
 				<td colspan="3" valign="top" bgcolor="#aaa">
 					<div>
-						<% FOREACH card IN cards %>
-							<h2><% card.card_name %>:</h2>
-							<img src=<% card.link %> > <br><hr>
-						<% END %>		
+						<form action="" method="post">
+							<p>Введите название карты: <input type="text" name="query" placeholder="query" /></p>
+							<p><input type="submit" value="Search" /></p>
+								<input type="hidden" name="csrf_token" placeholder="csrftoken"  value="<% csrf_token %>"/>
+						</form>		
 					<div>
 				</td>
 			</tr>

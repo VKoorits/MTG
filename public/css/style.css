@@ -18,3 +18,7 @@ body {
 .main_table {
 	width: 600px;
 }
+
+.top_link{
+	color: red;
+}
