@@ -1,13 +1,12 @@
 <!doctype html>
 <head>
-    <title>Atom notes</title>
+    <title>MTG</title>
 </head>
 
 <html>
 <body>
-
     <!-- Авторизация -->
-    <div class="b-auth b-block">
+    <div class="auth">
       <center>
         <h2>Auth</h2>
         <form action="" method="post">
