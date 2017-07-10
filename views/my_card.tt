@@ -22,7 +22,10 @@
 			<tr>
 				<td colspan="3" valign="top" bgcolor="#aaa">
 					<div>
-					
+						<% FOREACH card IN cards %>
+							<h2><% card.card_name %>:</h2>
+							<img src=<% card.link %> > <br><hr>
+						<% END %>		
 					<div>
 				</td>
 			</tr>

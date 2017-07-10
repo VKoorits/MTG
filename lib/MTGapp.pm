@@ -5,6 +5,8 @@ use DBI;
 use DBD::SQLite;
 use YAML::Tiny;
 
+use DDP;
+
 our $VERSION = '0.1';
 
 
@@ -27,7 +29,7 @@ sub connect_db {
 	
 	return $dbh;
 }	
-
+=head
 hook 'before' => sub {
 		set session => 'simple';
 
@@ -45,10 +47,23 @@ hook 'before' => sub {
 
 		
     };
-
+=cut
 
 get '/' => sub {
-    template 'my_card';
+	my $dbh = connect_db();
+	my $user_id = 1;#session('user_id') ;
+	my $query = <<END;
+		SELECT img.card_name, img.link 
+		FROM pictures as img
+		WHERE img.card_id IN (
+			SELECT ac.card_id 
+			FROM available_cards as ac
+			WHERE ac.user_id=$user_id
+		)
+END
+	my $cards = $dbh->selectall_arrayref($query, {Slice => {}});
+	p $cards;
+    template 'my_card', { cards => $cards };
 };
 
 post '/login' => sub {
@@ -62,7 +77,7 @@ post '/login' => sub {
 		#TODO сделать невозможным ввод русских букв, иначе crypt падает
 		$sth->execute($user, crypt($password, $user) );
 		my $answer = $sth->fetchrow_arrayref();
-		
+		p $answer;
 		
 		if( not defined $answer) {
 			template 'login';	
