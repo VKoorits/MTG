@@ -7,9 +7,6 @@ use YAML::Tiny;
 use AnyEvent::HTTP;
 use Parser 'parse';
 
-use DDP;
-
-our $VERSION = '0.1';
 my $ONE_CARD_PRICE = 100;
 
 
@@ -46,7 +43,7 @@ sub get_magic_cards {
 	return \@cards;
 }
 
-
+# совершить покупку карты
 sub deal {	
 	my $dbh = connect_db();
 	
@@ -67,7 +64,7 @@ sub deal {
 		." and card_id="
 		.$card_id->[0]->[0]
 	);
-	print "\n\ncount_this_card => ".$has_card->[0]->[0]."\n\n";
+	
 	if( $has_card->[0]->[0] <= 0) {	
 		$dbh->do("INSERT INTO available_cards (user_id, card_id) VALUES (".session('user_id').",".$card_id->[0]->[0].") ");
 		$dbh->do( "UPDATE users SET balance="
@@ -87,8 +84,6 @@ sub deal {
 
 hook 'before' => sub {
 		set session => 'simple';
-		#session user_id => 1;
-		#session balance => 1000;
 		if (request->path_info !~ m{^/login} &&
 			request->path_info !~ m{^/CSRF} &&
 		 	!session('user_id')) {
@@ -127,6 +122,7 @@ post '/get_card' => sub {
 		"SELECT req_id FROM requests WHERE req='$query'");
 	
 	my @cards;
+
 	#если такой запрос встречался, то мы берем его из БД
 	if( defined $check_db->[0] ) {
 		@cards = @{ $dbh->selectall_arrayref(
@@ -140,7 +136,7 @@ post '/get_card' => sub {
 			)};
 	} else {
 		@cards = @{ get_magic_cards($query) };
-		#TODO last_insert_id
+		#TODO! last_insert_id
 		$dbh->do("INSERT INTO requests (req) VALUES ('$query')");
 		$check_db = $dbh->selectall_arrayref(
 		"SELECT req_id FROM requests WHERE req='$query'");
@@ -160,7 +156,6 @@ post '/get_card' => sub {
 			
 			my $stmt = "INSERT INTO answers (req_id, card_id) VALUES"
 					."($check_db->[0]->[0], $card_id->[0]->[0])";
-			p $stmt;
 			$dbh->do($stmt);
 		}
 	}
@@ -168,17 +163,16 @@ post '/get_card' => sub {
 	if( @cards == 0) {
 		template 'get_card', {csrf_token => get_csrf_token(), ok => 1, message => "По вашему запросу не найдено карт :( попробуйте ещё раз"}
 	} elsif( @cards == 1 ) {
-		deal($cards[0]);
+		template 'proof', {card => $cards[0]->{'card_name'}, link =>$cards[0]->{'link'}, csrf_token => get_csrf_token()};
 	} else {
-		print "\nbuy_card\n";
 		template 'select_card', { cards => \@cards, csrf_token => get_csrf_token()};
 	}
 };
 any ["get", "head"] => '/get_card' => sub {
 	my $ok = 1;
 	$ok = 0 if( session('balance') < $ONE_CARD_PRICE );
-	print "\nok => $ok\n";
-	template 'get_card', { csrf_token => get_csrf_token(), ok => $ok, message =>"" } };
+	template 'get_card', { csrf_token => get_csrf_token(), ok => $ok, message =>"" }
+};
 
 
 post '/proof' => sub {
@@ -190,9 +184,6 @@ post '/deal' => sub {
 	my $card_name = params->{card_name};
 	my $link = params->{'link'};
 	deal( { card_name => $card_name, link => $link } );
-	print "card_name => ".$card_name."\n";
-	print "link => ".$link."\n";
-	redirect '/';
 };
 
 post '/login' => sub {
@@ -206,7 +197,7 @@ post '/login' => sub {
 		#TODO сделать невозможным ввод русских букв, иначе crypt падает
 		$sth->execute($user, crypt($password, $user) );
 		my $answer = $sth->fetchrow_arrayref();
-		p $answer;
+		
 		
 		if( not defined $answer) {
 			template 'login';	

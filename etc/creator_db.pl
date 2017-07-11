@@ -3,6 +3,8 @@ use strict;
 use DBI;
 use DBD::SQLite;
 
+my $STARTED_COUNT_MONEY = 1000;
+
 my $dbh = DBI->connect("DBI:SQLite:dbname=MTG.db", "", "", { RaiseError => 1 }) or die "can not connect: ".$DBI::errstr;
 
 # таблица пользователей
@@ -27,7 +29,7 @@ for my $user ( @users ) {
 	$sth->execute(
 			$user->{login},
 			crypt($user->{pass}, $user->{login}),
-			1000 #TODO завести константу
+			$STARTED_COUNT_MONEY
 	);
 }
 
